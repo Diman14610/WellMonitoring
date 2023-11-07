@@ -5,7 +5,7 @@ import ruMessages from "devextreme/localization/messages/ru.json"
 import MainPage from './pages/MainPage'
 import Base from './routes/MainLayout';
 import NotFound from './pages/NotFound';
-import ReportPage from './pages/ReportPage';
+import WellPage from './pages/WellPage';
 
 export default function App() {
   loadMessages(ruMessages);
@@ -19,7 +19,7 @@ export default function App() {
         <Routes>
           <Route path='/' element={<Base />}>
             <Route path='telemetry' element={<MainPage />} />
-            <Route path='report' element={<ReportPage />} />
+            <Route path='report' element={<WellPage />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

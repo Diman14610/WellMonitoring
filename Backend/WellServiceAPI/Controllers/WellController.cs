@@ -181,8 +181,7 @@ namespace WellServiceAPI.Controllers
                     return NotFound();
                 }
 
-                var activeWells = (await _getAllWellsByActive
-                    .ExecuteAsync(new GetAllWellsByActivityParam(1)))
+                var activeWells = (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
                     .Where(w => w.CompanyId == companyId)
                     .Select(w => new TotalDepthWells()
                     {
@@ -196,6 +195,35 @@ namespace WellServiceAPI.Controllers
             {
                 await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при получении общей глубины для каждой скважины с идентификатором компании: {companyId}.");
+            }
+        }
+
+        [HttpGet("depth/company/{companyName}")]
+        public async Task<ActionResult<IEnumerable<TotalDepthWells>>> GetTotalDepthByCompanyNameAsync(string companyName, DateTime fromDate, DateTime toDate)
+        {
+            try
+            {
+                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName));
+
+                if (foundCompany == null)
+                {
+                    return NotFound();
+                }
+
+                var activeWells = (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
+                    .Where(w => IsEquals(w.Company.Name, companyName))
+                    .Select(w => new TotalDepthWells()
+                    {
+                        WellName = w.Name,
+                        Score = w.Telemetries.Where(t => t.DateTime >= fromDate && t.DateTime <= toDate).Sum(r => r.Depth)
+                    });
+
+                return Ok(activeWells);
+            }
+            catch (Exception ex)
+            {
+                await Console.Out.WriteLineAsync(ex.Message);
+                return StatusCode(500, $"Произошла ошибка при получении общей глубины для каждой скважины с именем компании: {companyName}.");
             }
         }
 

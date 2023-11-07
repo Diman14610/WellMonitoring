@@ -2,7 +2,7 @@ import MenuItem from '@/routes/menu/menu-item'
 
 const MENU_ITEMS = [
   { name: 'Телеметрия', to: '/telemetry' },
-  { name: 'Отчеты', to: '/report' },
+  { name: 'Скважины', to: '/report' },
 ]
 
 function Menu({ className }: { className?: string }) {
