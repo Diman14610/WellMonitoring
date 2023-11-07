@@ -7,6 +7,8 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import { exportDataGrid } from 'devextreme/pdf_exporter';
 import { Button } from '@mui/material';
+import { font } from './../assets/font-string';
+
 
 const getConnection = (value: string): string => `${connectionString}${value}`;
 
@@ -83,6 +85,11 @@ export default function WellPage() {
 
   const onExporting = useCallback((e: any) => {
     const doc = new jsPDF();
+
+    doc.addFileToVFS('ciril-normal.ttf', font);
+    doc.addFont('ciril-normal.ttf', 'ciril', 'normal');
+    doc.setFont('ciril');
+
     exportDataGrid({
       jsPDFDocument: doc,
       component: e.component,
@@ -177,7 +184,6 @@ export default function WellPage() {
             />
             <Column
               dataField="Flag"
-              width={150}
               dataType='boolean'
               caption='Активный?'
             />

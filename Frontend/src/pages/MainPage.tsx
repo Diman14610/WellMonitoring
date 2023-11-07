@@ -1,6 +1,6 @@
 import CustomStore from 'devextreme/data/custom_store';
 import { DataGrid } from 'devextreme-react';
-import { Column, FilterRow, Pager } from 'devextreme-react/data-grid';
+import { Column, FilterRow, GroupPanel, Grouping, Pager } from 'devextreme-react/data-grid';
 import 'devextreme/dist/css/dx.light.css';
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useRef, useState } from 'react';
@@ -82,6 +82,8 @@ export default function MainPage() {
       >
         <Pager showPageSizeSelector showInfo />
         <FilterRow visible />
+        <Grouping contextMenuEnabled autoExpandAll expandMode="rowClick" />
+        <GroupPanel visible />
 
         <Column
           dataField="telemetryId"
