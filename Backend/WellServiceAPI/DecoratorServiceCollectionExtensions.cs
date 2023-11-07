@@ -12,14 +12,9 @@ namespace WellServiceAPI
         {
             var decorateeServices = new ServiceCollection();
 
-            // This calls back to the decoratee configuration lambda.
             configureDecorateeServices(decorateeServices);
 
             var decorateeDescriptor =
-                // For now, support defining only single decoratee.
-                // TODO: To support cases such as composite decorators 
-                // (accepting multiple decoratees and representing them as single)
-                // implement handling multiple decoratee configurations.
                 decorateeServices.SingleOrDefault(sd => sd.ServiceType == typeof(TService));
 
             if (decorateeDescriptor == null)
@@ -27,15 +22,10 @@ namespace WellServiceAPI
                 throw new InvalidOperationException("No decoratee configured!");
             }
 
-            // We will replace this descriptor with a tweaked one later.
             decorateeServices.Remove(decorateeDescriptor);
 
-            // Add all remaining services to main collection.
             serviceCollection.Add(decorateeServices);
 
-            // This factory allows us to pass some dependencies 
-            // (the decoratee instance) manually,
-            // which is not possible with something like GetRequiredService. 
             var decoratorInstanceFactory = ActivatorUtilities.CreateFactory(
                 typeof(TDecorator), new[] { typeof(TService) });
 
@@ -43,35 +33,22 @@ namespace WellServiceAPI
 
             Func<IServiceProvider, TDecorator> decoratorFactory = sp =>
             {
-                // Note that we query the decoratee by it's implementation type,
-                // avoiding any ambiguity. 
                 var decoratee = sp.GetRequiredService(decorateeImplType);
-                // Pass the decoratee manually. All other dependencies are resolved as usual.
                 var decorator = (TDecorator)decoratorInstanceFactory(sp, new[] { decoratee });
                 return decorator;
             };
 
-            // Decorator inherits decoratee's lifetime.
             var decoratorDescriptor = ServiceDescriptor.Describe(
                 typeof(TService),
                 decoratorFactory,
                 decorateeDescriptor.Lifetime);
 
-            // Re-create the decoratee without original service type (interface).
-            // This allows to create decoratee instances via
-            // service provider, utilizing its lifetime scope
-            // control finctionality.
             decorateeDescriptor = RefactorDecorateeDescriptor(decorateeDescriptor);
 
             serviceCollection.Add(decorateeDescriptor);
             serviceCollection.Add(decoratorDescriptor);
         }
 
-        /// <summary>
-        /// The goal of this method is to replace the service type (interface)
-        /// with the implementation type in any kind of service descriptor.
-        /// Actually, we build new service descriptor.
-        /// </summary>
         private static ServiceDescriptor RefactorDecorateeDescriptor(ServiceDescriptor decorateeDescriptor)
         {
             var decorateeImplType = decorateeDescriptor.GetImplementationType();
@@ -96,7 +73,7 @@ namespace WellServiceAPI
             {
                 decorateeDescriptor =
                     ServiceDescriptor.Describe(
-                    decorateeImplType, // Yes, use the same type for both.
+                    decorateeImplType, 
                     decorateeImplType,
                     decorateeDescriptor.Lifetime);
             }
@@ -104,10 +81,7 @@ namespace WellServiceAPI
             return decorateeDescriptor;
         }
 
-        /// <summary>
-        /// Infers the implementation type for any kind of service descriptor
-        /// (i.e. even when implementation type is not specified explicitly).
-        /// </summary>
+    
         private static Type GetImplementationType(this ServiceDescriptor serviceDescriptor)
         {
             if (serviceDescriptor.ImplementationType != null)
@@ -116,13 +90,9 @@ namespace WellServiceAPI
             if (serviceDescriptor.ImplementationInstance != null)
                 return serviceDescriptor.ImplementationInstance.GetType();
 
-            // Get the type from the return type of the factory delegate.
-            // Due to covariance, the delegate object can have more concrete type
-            // than the factory delegate defines (object).
             if (serviceDescriptor.ImplementationFactory != null)
                 return serviceDescriptor.ImplementationFactory.GetType().GenericTypeArguments[1];
 
-            // This should not be possible, but just in case.
             throw new InvalidOperationException("No way to get the decoratee implementation type.");
         }
     }

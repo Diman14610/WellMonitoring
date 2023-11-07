@@ -1,0 +1,1 @@
+export const connectionString: string = 'https://localhost:44355/';

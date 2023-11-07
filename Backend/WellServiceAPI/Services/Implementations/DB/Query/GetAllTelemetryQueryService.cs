@@ -3,11 +3,11 @@ using WellServiceAPI.Data;
 using WellServiceAPI.Services.Abstractions.DB;
 using WellServiceAPI.Shared.Response.Telemetry;
 
-namespace WellServiceAPI.Services.Implementations.DB.SqlLite.Query
+namespace WellServiceAPI.Services.Implementations.DB.Query
 {
-    public class SqlLiteQueryServiceGetAllTelemetry : QueryServiceBase<IEnumerable<TelemetryInfo>>
+    public class GetAllTelemetryQueryService : QueryServiceBase<IEnumerable<TelemetryInfo>>
     {
-        public SqlLiteQueryServiceGetAllTelemetry(WellDBContext wellDBContext) : base(wellDBContext)
+        public GetAllTelemetryQueryService(WellDBContext wellDBContext) : base(wellDBContext)
         {
         }
 
@@ -21,12 +21,11 @@ namespace WellServiceAPI.Services.Implementations.DB.SqlLite.Query
                     TelemetryId = telemetry.Id,
                     DateTime = telemetry.DateTime,
                     Depth = telemetry.Depth,
-                    WellId = telemetry.WellId ?? 0,
-                    ContractorName = telemetry.Well!.Company.Name!,
+                    WellId = telemetry.WellId,
+                    ContractorName = telemetry.Well.Company.Name,
                     WellName = telemetry.Well.Name,
                 })
-                .ToListAsync()
-                .ConfigureAwait(false);
+                .ToListAsync();
 
             return telemetrs;
         }

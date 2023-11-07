@@ -1,5 +1,0 @@
-export { default as Article } from './article'
-export { default as ArticleContent } from './content'
-export { default as ArticleImage } from './image'
-export { default as ArticleMedia } from './media'
-export { default as ArticleTitle } from './title'

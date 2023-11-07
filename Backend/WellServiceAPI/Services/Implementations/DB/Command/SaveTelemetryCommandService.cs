@@ -3,11 +3,11 @@ using WellServiceAPI.Models;
 using WellServiceAPI.Services.Abstractions.DB;
 using WellServiceAPI.Shared.Actions.Command;
 
-namespace WellServiceAPI.Services.Implementations.DB.SqlLite.Command
+namespace WellServiceAPI.Services.Implementations.DB.Command
 {
-    public class SqlLiteCommandServiceSaveTelemetry : CommandServiceBase<SaveTelemetryData>
+    public class SaveTelemetryCommandService : CommandServiceBase<SaveTelemetryData>
     {
-        public SqlLiteCommandServiceSaveTelemetry(WellDBContext wellDBContext) : base(wellDBContext)
+        public SaveTelemetryCommandService(WellDBContext wellDBContext) : base(wellDBContext)
         {
         }
 
@@ -27,7 +27,7 @@ namespace WellServiceAPI.Services.Implementations.DB.SqlLite.Command
                 });
             }
 
-            await _wellDBContext.SaveChangesAsync().ConfigureAwait(false);
+            await _wellDBContext.SaveChangesAsync();
         }
     }
 }

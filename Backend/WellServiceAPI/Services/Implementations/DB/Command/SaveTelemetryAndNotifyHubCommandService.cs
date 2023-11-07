@@ -6,14 +6,14 @@ using WellServiceAPI.Services.Abstractions.SignalR;
 using WellServiceAPI.Shared.Actions.Command;
 using WellServiceAPI.Shared.Response.Telemetry;
 
-namespace WellServiceAPI.Services.Implementations.DB.SqlLite.Command
+namespace WellServiceAPI.Services.Implementations.DB.Command
 {
-    public class SqlLiteCommandServiceSaveTelemetryAndNotifyHub : CommandServiceBase<SaveTelemetryData>
+    public class SaveTelemetryAndNotifyHubCommandService : CommandServiceBase<SaveTelemetryData>
     {
         private readonly ICommandService<SaveTelemetryData> _commandService;
         private readonly IMessagesHub _messagesHub;
 
-        public SqlLiteCommandServiceSaveTelemetryAndNotifyHub(
+        public SaveTelemetryAndNotifyHubCommandService(
             WellDBContext wellDBContext,
             ICommandService<SaveTelemetryData> commandService,
             IMessagesHub messagesHub) : base(wellDBContext)
@@ -32,8 +32,9 @@ namespace WellServiceAPI.Services.Implementations.DB.SqlLite.Command
             {
                 var telemetry = await _wellDBContext.Telemetrys
                               .Include(t => t.Well)
-                              .ThenInclude(t => t!.Company)
-                              .FirstOrDefaultAsync(t => t.WellId == TelemetryData.WellId);
+                              .ThenInclude(t => t.Company)
+                              .OrderBy(t => t.Id)
+                              .LastOrDefaultAsync(t => t.WellId == TelemetryData.WellId && t.Depth == TelemetryData.Depth && t.DateTime == TelemetryData.DateTime);
 
                 if (telemetry == null) continue;
 
@@ -42,8 +43,8 @@ namespace WellServiceAPI.Services.Implementations.DB.SqlLite.Command
                     TelemetryId = telemetry.Id,
                     DateTime = telemetry.DateTime,
                     Depth = telemetry.Depth,
-                    WellId = telemetry.WellId ?? 0,
-                    ContractorName = telemetry.Well!.Company.Name!,
+                    WellId = telemetry.WellId,
+                    ContractorName = telemetry.Well.Company.Name,
                     WellName = telemetry.Well.Name,
                 });
             }

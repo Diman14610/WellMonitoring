@@ -8,8 +8,8 @@
 
         public float Depth { get; set; }
 
-        public int? WellId { get; set; }
+        public int WellId { get; set; }
 
-        public virtual Well? Well { get; set; }
+        public virtual Well Well { get; set; } = null!;
     }
 }

@@ -1,14 +1,15 @@
+using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using WellServiceAPI.Data;
 using WellServiceAPI.Services;
 using WellServiceAPI.Services.Abstractions.DB;
 using WellServiceAPI.Services.Abstractions.SignalR;
-using WellServiceAPI.Services.Implementations.DB.SqlLite.Command;
+using WellServiceAPI.Services.Implementations.DB.Command;
 using WellServiceAPI.Services.Implementations.SignalR;
 using WellServiceAPI.Shared.Actions.Command;
-using WellServiceAPI.Shared.Response.Telemetry;
 
 namespace WellServiceAPI
 {
@@ -27,6 +28,8 @@ namespace WellServiceAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme).AddCertificate();
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder => builder.AllowAnyMethod().AllowAnyHeader().AllowCredentials());
@@ -36,51 +39,49 @@ namespace WellServiceAPI
 
             builder.Services.AddDbContext<WellDBContext>(option =>
             {
-                option.UseSqlite("Data Source=WellDatabase.db");
+                option.UseSqlite(builder.Configuration.GetConnectionString("WellsDatabase"));
             });
 
             builder.Services.AddHostedService<WellActivityService>();
 
-            builder.Services.AddDecorator<ICommandService<SaveTelemetryData>, SqlLiteCommandServiceSaveTelemetryAndNotifyHub>(decorateeServices =>
+            builder.Services.AddDecorator<ICommandService<SaveTelemetryData>, SaveTelemetryAndNotifyHubCommandService>(decorateeServices =>
             {
-                decorateeServices.AddScoped<ICommandService<SaveTelemetryData>, SqlLiteCommandServiceSaveTelemetry>();
+                decorateeServices.AddScoped<ICommandService<SaveTelemetryData>, SaveTelemetryCommandService>();
             });
 
             builder.Services.AddSingleton<IMessagesHub, MessagesHubService>();
 
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (var assembly in assemblies)
+            var types = Assembly.GetExecutingAssembly().GetTypes();
+            foreach (var type in types)
             {
-                var types = assembly.GetTypes();
+                if (type.IsAbstract) continue;
 
-                foreach (var type in types)
+                var interfaces = type.GetInterfaces();
+
+                foreach (var interfaceType in interfaces)
                 {
-                    if (type.IsAbstract) continue;
+                    var genericArguments = interfaceType.GetGenericArguments();
 
-                    var interfaces = type.GetInterfaces();
+                    if (genericArguments.Length == 0) continue;
 
-                    foreach (var interfaceType in interfaces)
+                    Type? serviceType = null;
+
+                    if (interfaceType?.GetGenericTypeDefinition() == typeof(ICommandService<>))
                     {
-                        var genericArguments = interfaceType.GetGenericArguments();
+                        serviceType = typeof(ICommandService<>).MakeGenericType(genericArguments[0]);
+                    }
+                    else if (interfaceType?.GetGenericTypeDefinition() == typeof(IQueryService<>))
+                    {
+                        serviceType = typeof(IQueryService<>).MakeGenericType(genericArguments[0]);
+                    }
+                    else if (interfaceType?.GetGenericTypeDefinition() == typeof(IQueryService<,>))
+                    {
+                        serviceType = typeof(IQueryService<,>).MakeGenericType(genericArguments[0], genericArguments[1]);
+                    }
 
-                        if (genericArguments.Length == 0) continue;
-                        if (type.FullName != null && type.FullName.Contains("SqlLiteCommandServiceSaveTelemetry")) continue;
-
-                        if (interfaceType?.GetGenericTypeDefinition() == typeof(ICommandService<>))
-                        {
-                            var serviceType = typeof(ICommandService<>).MakeGenericType(genericArguments[0]);
-                            builder.Services.AddTransient(serviceType, type);
-                        }
-                        else if (interfaceType?.GetGenericTypeDefinition() == typeof(IQueryService<>))
-                        {
-                            var serviceType = typeof(IQueryService<>).MakeGenericType(genericArguments[0]);
-                            builder.Services.AddTransient(serviceType, type);
-                        }
-                        else if (interfaceType?.GetGenericTypeDefinition() == typeof(IQueryService<,>))
-                        {
-                            var serviceType = typeof(IQueryService<,>).MakeGenericType(genericArguments[0], genericArguments[1]);
-                            builder.Services.AddTransient(serviceType, type);
-                        }
+                    if (serviceType != null && !builder.Services.Any(x => x.ServiceType == serviceType))
+                    {
+                        builder.Services.AddTransient(serviceType, type);
                     }
                 }
             }
@@ -98,9 +99,10 @@ namespace WellServiceAPI
                 con
                 .AllowAnyMethod()
                 .AllowAnyHeader()
-                .SetIsOriginAllowed(origin => true) // allow any origin
-                .AllowCredentials(); // allow credentials
+                .SetIsOriginAllowed(origin => true)
+                .AllowCredentials();
             });
+            app.UseCors("CorsPolicy");
 
             app.UseHttpsRedirection();
 
@@ -109,6 +111,8 @@ namespace WellServiceAPI
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.UseAuthentication();
 
             app.Run();
         }

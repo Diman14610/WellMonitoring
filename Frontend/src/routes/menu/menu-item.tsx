@@ -4,9 +4,11 @@ function MenuItem({ name, to }: { name: string; to: string }) {
   return (
     <li>
       <NavLink
-        className={({ isActive }) =>
-          isActive ? 'border-b text-white' : 'text-white hover:border-b'
-        }
+        style={({ isActive }) => {
+          return {
+            color: isActive ? 'Highlight' : 'black'
+          }
+        }}
         to={to}
       >
         {name}

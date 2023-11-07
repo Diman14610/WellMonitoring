@@ -4,11 +4,11 @@ using WellServiceAPI.Models;
 using WellServiceAPI.Services.Abstractions.DB;
 using WellServiceAPI.Shared.Actions.Query;
 
-namespace WellServiceAPI.Services.Implementations.DB.SqlLite.Query
+namespace WellServiceAPI.Services.Implementations.DB.Query
 {
-    public class SQLLiteQueryServiceGetAllWellsByActivityParam : QueryServiceBase<GetAllWellsByActivityParam, IEnumerable<Well>>
+    public class GetAllWellsByActivityParamQueryService : QueryServiceBase<GetAllWellsByActivityParam, IEnumerable<Well>>
     {
-        public SQLLiteQueryServiceGetAllWellsByActivityParam(WellDBContext wellDBContext) : base(wellDBContext)
+        public GetAllWellsByActivityParamQueryService(WellDBContext wellDBContext) : base(wellDBContext)
         {
         }
 
@@ -18,8 +18,7 @@ namespace WellServiceAPI.Services.Implementations.DB.SqlLite.Query
                 .Where(w => w.Active == query.Active)
                 .Include(w => w.Company)
                 .Include(w => w.Telemetries)
-                .ToListAsync()
-                .ConfigureAwait(false);
+                .ToListAsync();
         }
     }
 }

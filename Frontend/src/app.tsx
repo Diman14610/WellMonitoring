@@ -1,10 +1,11 @@
 import { ScrollToTop } from '@/components/scroll-to-top'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { formatMessage, loadMessages, locale } from 'devextreme/localization';
+import { loadMessages, locale } from 'devextreme/localization';
 import ruMessages from "devextreme/localization/messages/ru.json"
-import MainPage from './routes/Main'
+import MainPage from './pages/MainPage'
 import Base from './routes/MainLayout';
-import NotFound from './routes/NotFound';
+import NotFound from './pages/NotFound';
+import ReportPage from './pages/ReportPage';
 
 export default function App() {
   loadMessages(ruMessages);
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           <Route path='/' element={<Base />}>
             <Route path='telemetry' element={<MainPage />} />
+            <Route path='report' element={<ReportPage />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
