@@ -1,1 +1,1 @@
-export const connectionString: string = 'https://localhost:44355/';
+export const connectionString: string = 'http://localhost:5000/';
