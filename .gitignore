@@ -386,3 +386,5 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Backend/WellServiceAPI/WellDatabase.db
+/Backend/WellServiceAPI/WellDatabase.db-shm
+/Backend/WellServiceAPI/WellDatabase.db-wal
