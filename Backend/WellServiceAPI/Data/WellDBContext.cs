@@ -7,7 +7,9 @@ namespace WellServiceAPI.Data
     {
         public WellDBContext(DbContextOptions options) : base(options)
         {
+#if DEBUG
             Database.EnsureCreated();
+#endif
         }
 
         public DbSet<Well> Wells { get; set; }
@@ -18,11 +20,6 @@ namespace WellServiceAPI.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Telemetry>(t =>
-            {
-                t.Property(p => p.DateTime).HasColumnType("datetime");
-            });
-
             var companyId = 1;
             modelBuilder.Entity<Company>().HasData(
                 new Company { Id = companyId++, Name = "Black Gold" },
@@ -62,8 +59,7 @@ namespace WellServiceAPI.Data
                         random.Next(1, 20),
                         random.Next(1, 24),
                         random.Next(1, 60),
-                        random.Next(1, 60)
-                        ),
+                        random.Next(1, 60)),
                     Depth = random.Next(0, j * random.Next(1, 100)),
                 });
             }

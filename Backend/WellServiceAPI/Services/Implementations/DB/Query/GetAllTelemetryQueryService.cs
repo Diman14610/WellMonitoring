@@ -15,7 +15,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
         {
             var telemetrs = await _wellDBContext.Telemetrys
                 .Include(t => t.Well)
-                .ThenInclude(t => t!.Company)
+                .ThenInclude(t => t.Company)
                 .Select(telemetry => new TelemetryInfo
                 {
                     TelemetryId = telemetry.Id,
@@ -25,7 +25,8 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
                     ContractorName = telemetry.Well.Company.Name,
                     WellName = telemetry.Well.Name,
                 })
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             return telemetrs;
         }

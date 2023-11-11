@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using WellServiceAPI.Data;
@@ -19,12 +18,10 @@ namespace WellServiceAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services
-                .AddControllers()
-                .AddJsonOptions(option =>
-                {
-                    option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                });
+            builder.Services.AddControllers().AddJsonOptions(option =>
+            {
+                option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -51,6 +48,39 @@ namespace WellServiceAPI
 
             builder.Services.AddSingleton<IMessagesHub, MessagesHubService>();
 
+            InitializationCommandAndQueryRervices(builder.Services);
+
+            var app = builder.Build();
+
+#if DEBUG
+            app.UseSwagger();
+            app.UseSwaggerUI();
+            app.UseCors(con =>
+            {
+                con
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .SetIsOriginAllowed(origin => true)
+                .AllowCredentials();
+            });
+            app.UseCors("CorsPolicy");
+#endif
+
+            app.UseHttpsRedirection();
+
+            app.MapHub<MessagesHub>("/messages");
+
+            app.UseAuthorization();
+
+            app.MapControllers();
+
+            app.UseAuthentication();
+
+            app.Run();
+        }
+
+        private static void InitializationCommandAndQueryRervices(IServiceCollection services)
+        {
             var types = Assembly.GetExecutingAssembly().GetTypes();
             foreach (var type in types)
             {
@@ -79,39 +109,12 @@ namespace WellServiceAPI
                         serviceType = typeof(IQueryService<,>).MakeGenericType(genericArguments[0], genericArguments[1]);
                     }
 
-                    if (serviceType != null && !builder.Services.Any(x => x.ServiceType == serviceType))
+                    if (serviceType != null && !services.Any(x => x.ServiceType == serviceType))
                     {
-                        builder.Services.AddTransient(serviceType, type);
+                        services.AddTransient(serviceType, type);
                     }
                 }
             }
-
-            var app = builder.Build();
-
-            app.UseSwagger();
-            app.UseSwaggerUI();
-
-            app.UseCors(con =>
-            {
-                con
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .SetIsOriginAllowed(origin => true)
-                .AllowCredentials();
-            });
-            app.UseCors("CorsPolicy");
-
-            app.UseHttpsRedirection();
-
-            app.MapHub<MessagesHub>("/messages");
-
-            app.UseAuthorization();
-
-            app.MapControllers();
-
-            app.UseAuthentication();
-
-            app.Run();
         }
     }
 }

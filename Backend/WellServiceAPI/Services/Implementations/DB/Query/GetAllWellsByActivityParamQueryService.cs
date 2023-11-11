@@ -18,7 +18,8 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
                 .Where(w => w.Active == query.Active)
                 .Include(w => w.Company)
                 .Include(w => w.Telemetries)
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
         }
     }
 }

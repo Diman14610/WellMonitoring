@@ -12,6 +12,6 @@
 
         public virtual Company Company { get; set; } = null!;
 
-        public virtual ICollection<Telemetry> Telemetries { get; set; } = null!;
+        public virtual ICollection<Telemetry> Telemetries { get; set; } = new List<Telemetry>();
     }
 }

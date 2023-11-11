@@ -13,7 +13,11 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
 
         public override async Task<IEnumerable<Well>> ExecuteAsync()
         {
-            return await _wellDBContext.Wells.Include(w => w.Company).Include(w => w.Telemetries).ToListAsync();
+            return await _wellDBContext.Wells
+                .Include(w => w.Company)
+                .Include(w => w.Telemetries)
+                .ToListAsync()
+                .ConfigureAwait(false);
         }
     }
 }

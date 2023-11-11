@@ -10,9 +10,7 @@ namespace WellServiceAPI.Controllers
     {
         private readonly IQueryService<IEnumerable<Company>> _getAllCompanies;
 
-        public CompanyController(
-            IQueryService<IEnumerable<Company>> getAllCompanies
-            )
+        public CompanyController(IQueryService<IEnumerable<Company>> getAllCompanies)
         {
             _getAllCompanies = getAllCompanies ?? throw new ArgumentNullException(nameof(getAllCompanies));
         }
@@ -22,7 +20,7 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                var companies = (await _getAllCompanies.ExecuteAsync()).Select(w => w.Name);
+                IEnumerable<string> companies = (await _getAllCompanies.ExecuteAsync().ConfigureAwait(false)).Select(w => w.Name);
 
                 return Ok(companies);
             }

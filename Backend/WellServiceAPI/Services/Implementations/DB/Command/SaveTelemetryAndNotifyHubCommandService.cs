@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using WellServiceAPI.Data;
 using WellServiceAPI.Services.Abstractions.DB;
 using WellServiceAPI.Services.Abstractions.SignalR;
@@ -34,7 +33,8 @@ namespace WellServiceAPI.Services.Implementations.DB.Command
                               .Include(t => t.Well)
                               .ThenInclude(t => t.Company)
                               .OrderBy(t => t.Id)
-                              .LastOrDefaultAsync(t => t.WellId == TelemetryData.WellId && t.Depth == TelemetryData.Depth && t.DateTime == TelemetryData.DateTime);
+                              .LastOrDefaultAsync(t => t.WellId == TelemetryData.WellId && t.Depth == TelemetryData.Depth && t.DateTime == TelemetryData.DateTime)
+                              .ConfigureAwait(false);
 
                 if (telemetry == null) continue;
 
@@ -46,7 +46,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Command
                     WellId = telemetry.WellId,
                     ContractorName = telemetry.Well.Company.Name,
                     WellName = telemetry.Well.Name,
-                });
+                }).ConfigureAwait(false);
             }
         }
     }

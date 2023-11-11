@@ -14,7 +14,10 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
 
         public override async Task<IEnumerable<Telemetry>> ExecuteAsync(GetTelemetryByWellId query)
         {
-            return await _wellDBContext.Telemetrys.Where(t => t.WellId == query.Id).ToListAsync();
+            return await _wellDBContext.Telemetrys
+                .Where(t => t.WellId == query.Id)
+                .ToListAsync()
+                .ConfigureAwait(false);
         }
     }
 }

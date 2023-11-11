@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using WellServiceAPI.Services;
 using WellServiceAPI.Services.Abstractions.DB;
 using WellServiceAPI.Shared.Actions.Command;
 using WellServiceAPI.Shared.Request;
@@ -17,8 +15,7 @@ namespace WellServiceAPI.Controllers
 
         public TelemetryController(
             ICommandService<SaveTelemetryData> saveTelemetryData,
-            IQueryService<IEnumerable<TelemetryInfo>> getAllTelemetry
-            )
+            IQueryService<IEnumerable<TelemetryInfo>> getAllTelemetry)
         {
             _saveTelemetryData = saveTelemetryData ?? throw new ArgumentNullException(nameof(saveTelemetryData));
             _getAllTelemetry = getAllTelemetry;
@@ -29,12 +26,12 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                var telemetry = await _getAllTelemetry.ExecuteAsync();
+                IEnumerable<TelemetryInfo> telemetry = await _getAllTelemetry.ExecuteAsync().ConfigureAwait(false);
                 return Ok(telemetry);
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message);
+                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
                 return StatusCode(500, $"Произошла ошибка при добавлении телеметрии.");
             }
         }
@@ -49,12 +46,12 @@ namespace WellServiceAPI.Controllers
 
             try
             {
-                await _saveTelemetryData.ExecuteAsync(new SaveTelemetryData(telemetries));
+                await _saveTelemetryData.ExecuteAsync(new SaveTelemetryData(telemetries)).ConfigureAwait(false);
                 return Ok();
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message);
+                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
                 return StatusCode(500, $"Произошла ошибка при добавлении телеметрии.");
             }
         }

@@ -17,7 +17,7 @@ namespace WellServiceAPI.Services.Implementations.SignalR
         {
             if (telemetryInfo == null) return;
 
-            await _messagesHub.Clients.All.SendAsync("newTelemetry", telemetryInfo);
+            await _messagesHub.Clients.All.SendAsync("newTelemetry", telemetryInfo).ConfigureAwait(false);
         }
     }
 }

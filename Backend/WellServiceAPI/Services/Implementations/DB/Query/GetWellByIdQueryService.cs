@@ -13,7 +13,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
 
         public override async Task<Well?> ExecuteAsync(GetWellById query)
         {
-            return await _wellDBContext.Wells.FindAsync(query.Id);
+            return await _wellDBContext.Wells.FindAsync(query.Id).ConfigureAwait(false);
         }
     }
 }

@@ -15,13 +15,13 @@ namespace WellServiceAPI.Services.Implementations.DB.Command
         {
             if (command == null) return;
 
-            Well? foundWell = await _wellDBContext.Wells.FindAsync(command.Id);
+            Well? foundWell = await _wellDBContext.Wells.FindAsync(command.Id).ConfigureAwait(false);
 
             if (foundWell == null) return;
 
             foundWell.Active = command.Active;
 
-            await _wellDBContext.SaveChangesAsync();
+            await _wellDBContext.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

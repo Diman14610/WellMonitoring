@@ -18,7 +18,7 @@ namespace WellServiceAPI.IntegrationTests.Controllers
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             Assert.That(content, Is.Not.Null);
             Assert.That(content, Is.Not.Empty);
-            Assert.That(content.ToLower(), Is.EqualTo("deep"));
+            Assert.That(content.ToUpper(), Is.EqualTo("deep"));
         }
 
         [Test]
