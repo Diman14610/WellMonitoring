@@ -48,7 +48,7 @@ namespace WellServiceAPI
 
             builder.Services.AddSingleton<IMessagesHub, MessagesHubService>();
 
-            InitializationCommandAndQueryRervices(builder.Services);
+            InitializationCommandAndQueryServices(builder.Services);
 
             var app = builder.Build();
 
@@ -79,7 +79,7 @@ namespace WellServiceAPI
             app.Run();
         }
 
-        private static void InitializationCommandAndQueryRervices(IServiceCollection services)
+        private static void InitializationCommandAndQueryServices(IServiceCollection services)
         {
             var types = Assembly.GetExecutingAssembly().GetTypes();
             foreach (var type in types)
