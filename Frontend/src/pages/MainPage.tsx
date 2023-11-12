@@ -3,11 +3,9 @@ import { DataGrid } from 'devextreme-react';
 import { Column, FilterRow, GroupPanel, Grouping, Pager } from 'devextreme-react/data-grid';
 import 'devextreme/dist/css/dx.light.css';
 import * as signalR from "@microsoft/signalr";
-import { useEffect, useRef, useState } from 'react';
-import TelemetryInfo from '@/types/TelemetryInfo';
-import { connectionString } from '@/config';
-
-const getConnection = (value: string): string => `${connectionString}${value}`;
+import { useEffect, useState } from 'react';
+import TelemetryInfo from '../types/TelemetryInfo';
+import { getConnection } from '../utils/connectionString';
 
 const hubConnection = new signalR.HubConnectionBuilder()
   .withUrl(getConnection('messages'))

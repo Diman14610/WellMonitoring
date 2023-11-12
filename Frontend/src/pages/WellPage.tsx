@@ -2,27 +2,14 @@ import { DataGrid, DateBox } from 'devextreme-react';
 import { Column, Export, FilterRow, GroupPanel, Grouping, Pager, Selection } from 'devextreme-react/data-grid';
 import 'devextreme/dist/css/dx.light.css';
 import { useEffect, useState, useCallback } from 'react';
-import { connectionString } from '@/config';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import { exportDataGrid } from 'devextreme/pdf_exporter';
 import { Button } from '@mui/material';
 import { font } from './../assets/font-string';
-
-
-const getConnection = (value: string): string => `${connectionString}${value}`;
-
-interface ShortWellInfo {
-  CompanyName: string
-  WellName: string
-  Flag: boolean
-  Depth: number
-}
-
-interface DepthInfo {
-  score: number
-  wellName: string
-}
+import { getConnection } from '../utils/connectionString';
+import ShortWellInfo from '../types/ShortWellInfo';
+import DepthInfo from '../types/DepthInfo';
 
 const exportFormats: Array<"GIF" | "JPEG" | "PDF" | "PNG" | "SVG"> = ['PDF'];
 
