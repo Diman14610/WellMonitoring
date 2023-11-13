@@ -15,8 +15,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
         public override async Task<Company?> ExecuteAsync(GetCompanyByName query)
         {
             return await _wellDBContext.Companys
-                .FirstOrDefaultAsync(c => c.Name.ToUpper() == query.Name.ToUpper())
-                .ConfigureAwait(false);
+                .FirstOrDefaultAsync(c => c.Name.ToUpper() == query.Name.ToUpper());
         }
     }
 }

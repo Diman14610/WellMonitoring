@@ -25,8 +25,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
                     ContractorName = telemetry.Well.Company.Name,
                     WellName = telemetry.Well.Name,
                 })
-                .ToListAsync()
-                .ConfigureAwait(false);
+                .ToListAsync();
 
             return telemetrs;
         }

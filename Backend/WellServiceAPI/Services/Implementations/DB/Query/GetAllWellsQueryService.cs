@@ -16,8 +16,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
             return await _wellDBContext.Wells
                 .Include(w => w.Company)
                 .Include(w => w.Telemetries)
-                .ToListAsync()
-                .ConfigureAwait(false);
+                .ToListAsync();
         }
     }
 }

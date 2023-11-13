@@ -16,8 +16,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
         {
             return await _wellDBContext.Telemetrys
                 .Where(t => t.WellId == query.Id)
-                .ToListAsync()
-                .ConfigureAwait(false);
+                .ToListAsync();
         }
     }
 }

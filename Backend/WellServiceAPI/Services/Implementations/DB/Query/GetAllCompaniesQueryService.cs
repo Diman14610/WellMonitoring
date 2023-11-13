@@ -13,7 +13,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
 
         public override async Task<IEnumerable<Company>> ExecuteAsync()
         {
-            return await _wellDBContext.Companys.ToListAsync().ConfigureAwait(false);
+            return await _wellDBContext.Companys.ToListAsync();
         }
     }
 }

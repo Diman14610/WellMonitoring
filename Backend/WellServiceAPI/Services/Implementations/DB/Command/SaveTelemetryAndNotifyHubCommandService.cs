@@ -33,8 +33,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Command
                               .Include(t => t.Well)
                               .ThenInclude(t => t.Company)
                               .OrderBy(t => t.Id)
-                              .LastOrDefaultAsync(t => t.WellId == TelemetryData.WellId && t.Depth == TelemetryData.Depth && t.DateTime == TelemetryData.DateTime)
-                              .ConfigureAwait(false);
+                              .LastOrDefaultAsync(t => t.WellId == TelemetryData.WellId && t.Depth == TelemetryData.Depth && t.DateTime == TelemetryData.DateTime);
 
                 if (telemetry == null) continue;
 
@@ -46,7 +45,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Command
                     WellId = telemetry.WellId,
                     ContractorName = telemetry.Well.Company.Name,
                     WellName = telemetry.Well.Name,
-                }).ConfigureAwait(false);
+                });
             }
         }
     }

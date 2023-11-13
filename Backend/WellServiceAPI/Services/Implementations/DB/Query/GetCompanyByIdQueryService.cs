@@ -14,7 +14,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
 
         public override async Task<Company?> ExecuteAsync(GetCompanyById query)
         {
-            return await _wellDBContext.Companys.FirstOrDefaultAsync(c => c.Id == query.Id).ConfigureAwait(false);
+            return await _wellDBContext.Companys.FirstOrDefaultAsync(c => c.Id == query.Id);
         }
     }
 }

@@ -26,12 +26,12 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                IEnumerable<TelemetryInfo> telemetry = await _getAllTelemetry.ExecuteAsync().ConfigureAwait(false);
+                IEnumerable<TelemetryInfo> telemetry = await _getAllTelemetry.ExecuteAsync();
                 return Ok(telemetry);
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при добавлении телеметрии.");
             }
         }
@@ -46,12 +46,12 @@ namespace WellServiceAPI.Controllers
 
             try
             {
-                await _saveTelemetryData.ExecuteAsync(new SaveTelemetryData(telemetries)).ConfigureAwait(false);
+                await _saveTelemetryData.ExecuteAsync(new SaveTelemetryData(telemetries));
                 return Ok();
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при добавлении телеметрии.");
             }
         }

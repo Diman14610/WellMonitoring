@@ -27,7 +27,7 @@ namespace WellServiceAPI.Services.Implementations.DB.Command
                 });
             }
 
-            await _wellDBContext.SaveChangesAsync().ConfigureAwait(false);
+            await _wellDBContext.SaveChangesAsync();
         }
     }
 }

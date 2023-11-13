@@ -37,7 +37,7 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                var well = await _getWellById.ExecuteAsync(new GetWellById(wellId)).ConfigureAwait(false);
+                var well = await _getWellById.ExecuteAsync(new GetWellById(wellId));
 
                 if (well == null)
                 {
@@ -48,7 +48,7 @@ namespace WellServiceAPI.Controllers
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при извлечении скважины с идентификатором: {wellId}.");
             }
         }
@@ -58,14 +58,14 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName)).ConfigureAwait(false);
+                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName));
 
                 if (foundCompany == null)
                 {
                     return NotFound();
                 }
 
-                IEnumerable<string> wellsNames = (await _getAllWells.ExecuteAsync().ConfigureAwait(false))
+                IEnumerable<string> wellsNames = (await _getAllWells.ExecuteAsync())
                     .Where(w => IsEquals(w.Company.Name, companyName))
                     .Select(w => w.Name);
 
@@ -73,7 +73,7 @@ namespace WellServiceAPI.Controllers
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при извлечении скважин по названию компании: {companyName}.");
             }
         }
@@ -84,14 +84,14 @@ namespace WellServiceAPI.Controllers
             try
             {
                 IEnumerable<WellsWithContractors> wellInfos =
-                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)).ConfigureAwait(false))
+                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
                     .Select(w => new WellsWithContractors { WellName = w.Name, Contractor = w.Company.Name });
 
                 return Ok(wellInfos);
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, "Произошла ошибка при извлечении активных скважин подрядчиков.");
             }
         }
@@ -101,7 +101,7 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                var well = await _getWellById.ExecuteAsync(new GetWellById(wellId)).ConfigureAwait(false);
+                var well = await _getWellById.ExecuteAsync(new GetWellById(wellId));
 
                 if (well == null || !IsActive(well))
                 {
@@ -112,7 +112,7 @@ namespace WellServiceAPI.Controllers
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при извлечении активной скважины с идентификатором: {wellId}.");
             }
         }
@@ -122,7 +122,7 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName)).ConfigureAwait(false);
+                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName));
 
                 if (foundCompany == null)
                 {
@@ -130,7 +130,7 @@ namespace WellServiceAPI.Controllers
                 }
 
                 IEnumerable<string> wellsNames =
-                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)).ConfigureAwait(false))
+                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
                     .Where(w => IsEquals(w.Company.Name, companyName))
                     .Select(w => w.Name);
 
@@ -138,7 +138,7 @@ namespace WellServiceAPI.Controllers
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при извлечении активных скважин по названию компании: {companyName}.");
             }
         }
@@ -148,7 +148,7 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                var foundWell = await _getWellById.ExecuteAsync(new GetWellById(wellId)).ConfigureAwait(false);
+                var foundWell = await _getWellById.ExecuteAsync(new GetWellById(wellId));
 
                 if (foundWell == null)
                 {
@@ -156,7 +156,7 @@ namespace WellServiceAPI.Controllers
                 }
 
                 float totalDepth =
-                    (await _getTelemetryByWellId.ExecuteAsync(new GetTelemetryByWellId(wellId)).ConfigureAwait(false))
+                    (await _getTelemetryByWellId.ExecuteAsync(new GetTelemetryByWellId(wellId)))
                     .Where(t => t.DateTime >= fromDate && t.DateTime <= toDate)
                     .Sum(t => t.Depth);
 
@@ -164,7 +164,7 @@ namespace WellServiceAPI.Controllers
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при получении общей глубины для скважины с идентификатором: {wellId}.");
             }
         }
@@ -174,7 +174,7 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                var foundCompany = await _getWellById.ExecuteAsync(new GetWellById(companyId)).ConfigureAwait(false);
+                var foundCompany = await _getWellById.ExecuteAsync(new GetWellById(companyId));
 
                 if (foundCompany == null)
                 {
@@ -182,7 +182,7 @@ namespace WellServiceAPI.Controllers
                 }
 
                 IEnumerable<TotalDepthWells> activeWells =
-                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)).ConfigureAwait(false))
+                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
                     .Where(w => w.CompanyId == companyId)
                     .Select(w => new TotalDepthWells()
                     {
@@ -194,7 +194,7 @@ namespace WellServiceAPI.Controllers
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при получении общей глубины для каждой скважины с идентификатором компании: {companyId}.");
             }
         }
@@ -204,7 +204,7 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName)).ConfigureAwait(false);
+                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName));
 
                 if (foundCompany == null)
                 {
@@ -212,7 +212,7 @@ namespace WellServiceAPI.Controllers
                 }
 
                 IEnumerable<TotalDepthWells> activeWells =
-                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)).ConfigureAwait(false))
+                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
                     .Where(w => IsEquals(w.Company.Name, companyName))
                     .Select(w => new TotalDepthWells()
                     {
@@ -224,7 +224,7 @@ namespace WellServiceAPI.Controllers
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync(ex.Message).ConfigureAwait(false);
+                await Console.Out.WriteLineAsync(ex.Message);
                 return StatusCode(500, $"Произошла ошибка при получении общей глубины для каждой скважины с именем компании: {companyName}.");
             }
         }

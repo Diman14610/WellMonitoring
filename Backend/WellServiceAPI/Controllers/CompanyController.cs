@@ -20,7 +20,7 @@ namespace WellServiceAPI.Controllers
         {
             try
             {
-                IEnumerable<string> companies = (await _getAllCompanies.ExecuteAsync().ConfigureAwait(false)).Select(w => w.Name);
+                IEnumerable<string> companies = (await _getAllCompanies.ExecuteAsync()).Select(w => w.Name);
 
                 return Ok(companies);
             }

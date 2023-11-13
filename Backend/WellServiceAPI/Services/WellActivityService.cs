@@ -22,8 +22,8 @@ namespace WellServiceAPI.Services
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await CheckWellActivityAsync().ConfigureAwait(false);
-                await Task.Delay(delay, stoppingToken).ConfigureAwait(false);
+                await CheckWellActivityAsync();
+                await Task.Delay(delay, stoppingToken);
             }
         }
 
@@ -36,19 +36,19 @@ namespace WellServiceAPI.Services
 
             DateTime daysAgo = DateTime.UtcNow.AddDays(DAYS_AGO);
 
-            foreach (Well well in await getAllWells.ExecuteAsync().ConfigureAwait(false))
+            foreach (Well well in await getAllWells.ExecuteAsync())
             {
                 if (well == null) continue;
 
                 if (well.Telemetries.All(t => t.DateTime < daysAgo))
                 {
-                    await changeActiveWell.ExecuteAsync(new ChangeActiveWell(well.Id, NOT_ACTIVE)).ConfigureAwait(false);
-                    await Console.Out.WriteLineAsync($"Деактивация скважины {well.Name} (id: {well.Id}).").ConfigureAwait(false);
+                    await changeActiveWell.ExecuteAsync(new ChangeActiveWell(well.Id, NOT_ACTIVE));
+                    await Console.Out.WriteLineAsync($"Деактивация скважины {well.Name} (id: {well.Id}).");
                 }
                 else if (well.Active != ACTIVE)
                 {
-                    await changeActiveWell.ExecuteAsync(new ChangeActiveWell(well.Id, ACTIVE)).ConfigureAwait(false);
-                    await Console.Out.WriteLineAsync($"Активация скважины {well.Name} (id: {well.Id}).").ConfigureAwait(false);
+                    await changeActiveWell.ExecuteAsync(new ChangeActiveWell(well.Id, ACTIVE));
+                    await Console.Out.WriteLineAsync($"Активация скважины {well.Name} (id: {well.Id}).");
                 }
             }
         }
