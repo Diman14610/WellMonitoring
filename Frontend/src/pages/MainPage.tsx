@@ -33,7 +33,7 @@ export default function MainPage() {
       'contractorName',
     ],
     load: () => (
-      fetch(getConnection('api/v1/telemetry/all'))
+      fetch(getConnection('api/telemetry/all'))
         .then(handleErrors)
         .then((response) => response.json())
         .catch((e) => console.error(e))

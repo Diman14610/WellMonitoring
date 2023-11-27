@@ -1,32 +1,29 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using WellServiceAPI.Services.Abstractions.DB;
-using WellServiceAPI.Shared.Actions.Command;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using WellServiceAPI.Domain.Commands;
+using WellServiceAPI.Domain.Queries;
 using WellServiceAPI.Shared.Request;
 using WellServiceAPI.Shared.Response.Telemetry;
 
 namespace WellServiceAPI.Controllers
 {
     [ApiController]
-    [Route("api/v1/telemetry")]
+    [Route("api/[controller]")]
     public class TelemetryController : Controller
     {
-        private readonly ICommandService<SaveTelemetryData> _saveTelemetryData;
-        private readonly IQueryService<IEnumerable<TelemetryInfo>> _getAllTelemetry;
+        private readonly IMediator _mediator;
 
-        public TelemetryController(
-            ICommandService<SaveTelemetryData> saveTelemetryData,
-            IQueryService<IEnumerable<TelemetryInfo>> getAllTelemetry)
+        public TelemetryController(IMediator mediator)
         {
-            _saveTelemetryData = saveTelemetryData ?? throw new ArgumentNullException(nameof(saveTelemetryData));
-            _getAllTelemetry = getAllTelemetry;
+            _mediator = mediator;
         }
 
         [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<TelemetryInfo>>> GetAllTelemetryAsync()
+        public async Task<ActionResult<IEnumerable<TelemetryInfo>>> GetAllTelemetryAsync(CancellationToken cancellationToken)
         {
             try
             {
-                IEnumerable<TelemetryInfo> telemetry = await _getAllTelemetry.ExecuteAsync();
+                IEnumerable<TelemetryInfo> telemetry = await _mediator.Send(new GetAllTelemetryQuery(), cancellationToken).ConfigureAwait(false);
                 return Ok(telemetry);
             }
             catch (Exception ex)
@@ -37,7 +34,7 @@ namespace WellServiceAPI.Controllers
         }
 
         [HttpPost("all")]
-        public async Task<ActionResult> ReceiveTelemetryDataAsync(IEnumerable<TelemetryData> telemetries)
+        public async Task<ActionResult> ReceiveTelemetryDataAsync(IEnumerable<TelemetryData> telemetries, CancellationToken cancellationToken)
         {
             if (!telemetries.Any())
             {
@@ -46,7 +43,7 @@ namespace WellServiceAPI.Controllers
 
             try
             {
-                await _saveTelemetryData.ExecuteAsync(new SaveTelemetryData(telemetries));
+                await _mediator.Send(new SaveTelemetryDataCommand(telemetries), cancellationToken).ConfigureAwait(false);
                 return Ok();
             }
             catch (Exception ex)

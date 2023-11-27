@@ -1,50 +1,37 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using WellServiceAPI.Domain.Queries;
 using WellServiceAPI.Models;
-using WellServiceAPI.Services.Abstractions.DB;
-using WellServiceAPI.Shared.Actions.Query;
 using WellServiceAPI.Shared.Response.Well;
 
 namespace WellServiceAPI.Controllers
 {
     [ApiController]
-    [Route("api/v1/well")]
+    [Route("api/[controller]")]
     public class WellController : ControllerBase
     {
         private const int ACTIVE = 1;
 
-        private readonly IQueryService<GetWellById, Well> _getWellById;
-        private readonly IQueryService<GetAllWellsByActivityParam, IEnumerable<Well>> _getAllWellsByActive;
-        private readonly IQueryService<IEnumerable<Well>> _getAllWells;
-        private readonly IQueryService<GetCompanyByName, Company> _getCompanyByName;
-        private readonly IQueryService<GetTelemetryByWellId, IEnumerable<Telemetry>> _getTelemetryByWellId;
+        private readonly IMediator _mediator;
 
-        public WellController(
-            IQueryService<GetWellById, Well> getWellById,
-            IQueryService<GetCompanyByName, Company> getCompanyByName,
-            IQueryService<IEnumerable<Well>> getAllWells,
-            IQueryService<GetAllWellsByActivityParam, IEnumerable<Well>> getAllWellsByActive,
-            IQueryService<GetTelemetryByWellId, IEnumerable<Telemetry>> getTelemetryByWellId)
+        public WellController(IMediator mediator)
         {
-            _getWellById = getWellById ?? throw new ArgumentNullException(nameof(getWellById));
-            _getCompanyByName = getCompanyByName ?? throw new ArgumentNullException(nameof(getCompanyByName));
-            _getAllWells = getAllWells ?? throw new ArgumentNullException(nameof(getAllWells));
-            _getAllWellsByActive = getAllWellsByActive ?? throw new ArgumentNullException(nameof(getAllWellsByActive));
-            _getTelemetryByWellId = getTelemetryByWellId ?? throw new ArgumentNullException(nameof(getTelemetryByWellId));
+            _mediator = mediator;
         }
 
         [HttpGet("{wellId:int}")]
-        public async Task<ActionResult<string>> GetWellByIdAsync(int wellId)
+        public async Task<ActionResult<string>> GetWellByIdAsync(int wellId, CancellationToken cancellationToken)
         {
             try
             {
-                var well = await _getWellById.ExecuteAsync(new GetWellById(wellId));
+                var foundWell = await _mediator.Send(new GetWellByIdQuery(wellId), cancellationToken).ConfigureAwait(false);
 
-                if (well == null)
+                if (foundWell == null)
                 {
                     return NotFound();
                 }
 
-                return Ok(well.Name);
+                return Ok(foundWell.Name);
             }
             catch (Exception ex)
             {
@@ -54,18 +41,19 @@ namespace WellServiceAPI.Controllers
         }
 
         [HttpGet("company/{companyName}")]
-        public async Task<ActionResult<IEnumerable<string>>> GetWellsByCompanyNameAsync(string companyName)
+        public async Task<ActionResult<IEnumerable<string>>> GetWellsByCompanyNameAsync(string companyName, CancellationToken cancellationToken)
         {
             try
             {
-                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName));
+                var foundCompany = await _mediator.Send(new GetCompanyByNameQuery(companyName), cancellationToken).ConfigureAwait(false);
 
                 if (foundCompany == null)
                 {
                     return NotFound();
                 }
 
-                IEnumerable<string> wellsNames = (await _getAllWells.ExecuteAsync())
+                IEnumerable<string> wellsNames =
+                    (await _mediator.Send(new GetAllWellsQuery(), cancellationToken).ConfigureAwait(false))
                     .Where(w => IsEquals(w.Company.Name, companyName))
                     .Select(w => w.Name);
 
@@ -79,12 +67,12 @@ namespace WellServiceAPI.Controllers
         }
 
         [HttpGet("active/all")]
-        public async Task<ActionResult<IEnumerable<WellsWithContractors>>> GetActiveWellsWithContractorsAsync()
+        public async Task<ActionResult<IEnumerable<WellsWithContractors>>> GetActiveWellsWithContractorsAsync(CancellationToken cancellationToken)
         {
             try
             {
                 IEnumerable<WellsWithContractors> wellInfos =
-                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
+                    (await _mediator.Send(new GetAllWellsByActivityParamQuery(ACTIVE), cancellationToken).ConfigureAwait(false))
                     .Select(w => new WellsWithContractors { WellName = w.Name, Contractor = w.Company.Name });
 
                 return Ok(wellInfos);
@@ -97,18 +85,18 @@ namespace WellServiceAPI.Controllers
         }
 
         [HttpGet("active/{wellId:int}")]
-        public async Task<ActionResult<string>> GetActiveWellsByIdAsync(int wellId)
+        public async Task<ActionResult<string>> GetActiveWellsByIdAsync(int wellId, CancellationToken cancellationToken)
         {
             try
             {
-                var well = await _getWellById.ExecuteAsync(new GetWellById(wellId));
+                var foundWell = await _mediator.Send(new GetWellByIdQuery(wellId), cancellationToken).ConfigureAwait(false);
 
-                if (well == null || !IsActive(well))
+                if (foundWell == null || !IsActive(foundWell))
                 {
                     return NotFound();
                 }
 
-                return Ok(well.Name);
+                return Ok(foundWell.Name);
             }
             catch (Exception ex)
             {
@@ -118,11 +106,11 @@ namespace WellServiceAPI.Controllers
         }
 
         [HttpGet("active/company/{companyName}")]
-        public async Task<ActionResult<IEnumerable<string>>> GetActiveWellsByCompanyNameAsync(string companyName)
+        public async Task<ActionResult<IEnumerable<string>>> GetActiveWellsByCompanyNameAsync(string companyName, CancellationToken cancellationToken)
         {
             try
             {
-                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName));
+                var foundCompany = await _mediator.Send(new GetCompanyByNameQuery(companyName), cancellationToken).ConfigureAwait(false);
 
                 if (foundCompany == null)
                 {
@@ -130,7 +118,7 @@ namespace WellServiceAPI.Controllers
                 }
 
                 IEnumerable<string> wellsNames =
-                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
+                    (await _mediator.Send(new GetAllWellsByActivityParamQuery(ACTIVE), cancellationToken).ConfigureAwait(false))
                     .Where(w => IsEquals(w.Company.Name, companyName))
                     .Select(w => w.Name);
 
@@ -144,11 +132,11 @@ namespace WellServiceAPI.Controllers
         }
 
         [HttpGet("depth/{wellId:int}")]
-        public async Task<ActionResult<double>> GetTotalDepthByWellIdAsync(int wellId, DateTime fromDate, DateTime toDate)
+        public async Task<ActionResult<double>> GetTotalDepthByWellIdAsync(int wellId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken)
         {
             try
             {
-                var foundWell = await _getWellById.ExecuteAsync(new GetWellById(wellId));
+                var foundWell = await _mediator.Send(new GetWellByIdQuery(wellId), cancellationToken).ConfigureAwait(false);
 
                 if (foundWell == null)
                 {
@@ -156,7 +144,7 @@ namespace WellServiceAPI.Controllers
                 }
 
                 float totalDepth =
-                    (await _getTelemetryByWellId.ExecuteAsync(new GetTelemetryByWellId(wellId)))
+                    (await _mediator.Send(new GetTelemetryByWellIdQuery(wellId), cancellationToken).ConfigureAwait(false))
                     .Where(t => t.DateTime >= fromDate && t.DateTime <= toDate)
                     .Sum(t => t.Depth);
 
@@ -170,11 +158,11 @@ namespace WellServiceAPI.Controllers
         }
 
         [HttpGet("depth/company/{companyId:int}")]
-        public async Task<ActionResult<IEnumerable<TotalDepthWells>>> GetTotalDepthByCompanyIdAsync(int companyId, DateTime fromDate, DateTime toDate)
+        public async Task<ActionResult<IEnumerable<TotalDepthWells>>> GetTotalDepthByCompanyIdAsync(int companyId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken)
         {
             try
             {
-                var foundCompany = await _getWellById.ExecuteAsync(new GetWellById(companyId));
+                var foundCompany = await _mediator.Send(new GetCompanyByIdQuery(companyId), cancellationToken).ConfigureAwait(false);
 
                 if (foundCompany == null)
                 {
@@ -182,7 +170,7 @@ namespace WellServiceAPI.Controllers
                 }
 
                 IEnumerable<TotalDepthWells> activeWells =
-                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
+                    (await _mediator.Send(new GetAllWellsByActivityParamQuery(ACTIVE), cancellationToken).ConfigureAwait(false))
                     .Where(w => w.CompanyId == companyId)
                     .Select(w => new TotalDepthWells()
                     {
@@ -200,11 +188,11 @@ namespace WellServiceAPI.Controllers
         }
 
         [HttpGet("depth/company/{companyName}")]
-        public async Task<ActionResult<IEnumerable<TotalDepthWells>>> GetTotalDepthByCompanyNameAsync(string companyName, DateTime fromDate, DateTime toDate)
+        public async Task<ActionResult<IEnumerable<TotalDepthWells>>> GetTotalDepthByCompanyNameAsync(string companyName, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken)
         {
             try
             {
-                var foundCompany = await _getCompanyByName.ExecuteAsync(new GetCompanyByName(companyName));
+                var foundCompany = await _mediator.Send(new GetCompanyByNameQuery(companyName), cancellationToken).ConfigureAwait(false);
 
                 if (foundCompany == null)
                 {
@@ -212,7 +200,7 @@ namespace WellServiceAPI.Controllers
                 }
 
                 IEnumerable<TotalDepthWells> activeWells =
-                    (await _getAllWellsByActive.ExecuteAsync(new GetAllWellsByActivityParam(1)))
+                    (await _mediator.Send(new GetAllWellsByActivityParamQuery(ACTIVE), cancellationToken).ConfigureAwait(false))
                     .Where(w => IsEquals(w.Company.Name, companyName))
                     .Select(w => new TotalDepthWells()
                     {

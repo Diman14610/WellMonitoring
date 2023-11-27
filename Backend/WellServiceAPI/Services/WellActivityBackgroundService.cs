@@ -1,53 +1,56 @@
-﻿using WellServiceAPI.Models;
-using WellServiceAPI.Services.Abstractions.DB;
-using WellServiceAPI.Shared.Actions.Command;
+﻿using MediatR;
+using WellServiceAPI.Domain.Commands;
+using WellServiceAPI.Domain.Queries;
+using WellServiceAPI.Models;
 
 namespace WellServiceAPI.Services
 {
-    public class WellActivityService : BackgroundService
+    public class WellActivityBackgroundService : BackgroundService
     {
         private const int DAYS_AGO = -5;
         private const int ACTIVE = 1;
         private const int NOT_ACTIVE = 0;
 
-        private readonly TimeSpan delay = TimeSpan.FromMinutes(1);
         private readonly IServiceProvider _services;
 
-        public WellActivityService(IServiceProvider services)
+        private readonly TimeSpan delay = TimeSpan.FromMinutes(1);
+
+        public WellActivityBackgroundService(IServiceProvider services)
         {
-            _services = services ?? throw new ArgumentNullException(nameof(services));
+            _services = services;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await CheckWellActivityAsync();
+                await CheckWellActivityAsync(stoppingToken);
                 await Task.Delay(delay, stoppingToken);
             }
         }
 
-        private async Task CheckWellActivityAsync()
+        private async Task CheckWellActivityAsync(CancellationToken cancellationToken)
         {
             using IServiceScope scope = _services.CreateScope();
 
-            IQueryService<IEnumerable<Well>> getAllWells = scope.ServiceProvider.GetRequiredService<IQueryService<IEnumerable<Well>>>();
-            ICommandService<ChangeActiveWell> changeActiveWell = scope.ServiceProvider.GetRequiredService<ICommandService<ChangeActiveWell>>();
+            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
             DateTime daysAgo = DateTime.UtcNow.AddDays(DAYS_AGO);
 
-            foreach (Well well in await getAllWells.ExecuteAsync())
+            var wells = await mediator.Send(new GetAllWellsQuery(), cancellationToken).ConfigureAwait(false);
+
+            foreach (Well well in wells)
             {
                 if (well == null) continue;
 
                 if (well.Telemetries.All(t => t.DateTime < daysAgo))
                 {
-                    await changeActiveWell.ExecuteAsync(new ChangeActiveWell(well.Id, NOT_ACTIVE));
+                    await mediator.Send(new ChangeActivityWellCommand(well.Id, NOT_ACTIVE), cancellationToken).ConfigureAwait(false);
                     await Console.Out.WriteLineAsync($"Деактивация скважины {well.Name} (id: {well.Id}).");
                 }
                 else if (well.Active != ACTIVE)
                 {
-                    await changeActiveWell.ExecuteAsync(new ChangeActiveWell(well.Id, ACTIVE));
+                    await mediator.Send(new ChangeActivityWellCommand(well.Id, ACTIVE), cancellationToken).ConfigureAwait(false);
                     await Console.Out.WriteLineAsync($"Активация скважины {well.Name} (id: {well.Id}).");
                 }
             }

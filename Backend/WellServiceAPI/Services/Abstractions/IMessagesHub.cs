@@ -1,6 +1,6 @@
 ﻿using WellServiceAPI.Shared.Response.Telemetry;
 
-namespace WellServiceAPI.Services.Abstractions.SignalR
+namespace WellServiceAPI.Services.Abstractions
 {
     public interface IMessagesHub
     {

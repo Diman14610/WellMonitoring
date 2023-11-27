@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using WellServiceAPI.Services.Abstractions.SignalR;
+using WellServiceAPI.Services.Abstractions;
 using WellServiceAPI.Shared.Response.Telemetry;
 
-namespace WellServiceAPI.Services.Implementations.SignalR
+namespace WellServiceAPI.Services.Implementations
 {
     public class MessagesHubService : IMessagesHub
     {

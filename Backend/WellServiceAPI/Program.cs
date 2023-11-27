@@ -1,14 +1,11 @@
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 using System.Text.Json.Serialization;
 using WellServiceAPI.Data;
+using WellServiceAPI.Domain.Commands;
 using WellServiceAPI.Services;
-using WellServiceAPI.Services.Abstractions.DB;
-using WellServiceAPI.Services.Abstractions.SignalR;
-using WellServiceAPI.Services.Implementations.DB.Command;
-using WellServiceAPI.Services.Implementations.SignalR;
-using WellServiceAPI.Shared.Actions.Command;
+using WellServiceAPI.Services.Abstractions;
+using WellServiceAPI.Services.Implementations;
 
 namespace WellServiceAPI
 {
@@ -22,6 +19,7 @@ namespace WellServiceAPI
             {
                 option.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
+            builder.Services.AddRouting(options => options.LowercaseUrls = true);
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -39,16 +37,15 @@ namespace WellServiceAPI
                 option.UseSqlite(builder.Configuration.GetConnectionString("WellsDatabase"));
             });
 
-            builder.Services.AddHostedService<WellActivityService>();
-
-            builder.Services.AddDecorator<ICommandService<SaveTelemetryData>, SaveTelemetryAndNotifyHubCommandService>(decorateeServices =>
-            {
-                decorateeServices.AddScoped<ICommandService<SaveTelemetryData>, SaveTelemetryCommandService>();
-            });
+            builder.Services.AddHostedService<WellActivityBackgroundService>();
 
             builder.Services.AddSingleton<IMessagesHub, MessagesHubService>();
 
-            InitializationCommandAndQueryServices(builder.Services);
+            builder.Services.AddMediatR(cfg =>
+            {
+                cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+                cfg.AddRequestPreProcessor<SaveTelemetryAndNotifyHubCommand>();
+            });
 
             var app = builder.Build();
 
@@ -77,44 +74,6 @@ namespace WellServiceAPI
             app.UseAuthentication();
 
             app.Run();
-        }
-
-        private static void InitializationCommandAndQueryServices(IServiceCollection services)
-        {
-            var types = Assembly.GetExecutingAssembly().GetTypes();
-            foreach (var type in types)
-            {
-                if (type.IsAbstract) continue;
-
-                var interfaces = type.GetInterfaces();
-
-                foreach (var interfaceType in interfaces)
-                {
-                    var genericArguments = interfaceType.GetGenericArguments();
-
-                    if (genericArguments.Length == 0) continue;
-
-                    Type? serviceType = null;
-
-                    if (interfaceType?.GetGenericTypeDefinition() == typeof(ICommandService<>))
-                    {
-                        serviceType = typeof(ICommandService<>).MakeGenericType(genericArguments[0]);
-                    }
-                    else if (interfaceType?.GetGenericTypeDefinition() == typeof(IQueryService<>))
-                    {
-                        serviceType = typeof(IQueryService<>).MakeGenericType(genericArguments[0]);
-                    }
-                    else if (interfaceType?.GetGenericTypeDefinition() == typeof(IQueryService<,>))
-                    {
-                        serviceType = typeof(IQueryService<,>).MakeGenericType(genericArguments[0], genericArguments[1]);
-                    }
-
-                    if (serviceType != null && !services.Any(x => x.ServiceType == serviceType))
-                    {
-                        services.AddTransient(serviceType, type);
-                    }
-                }
-            }
         }
     }
 }

@@ -21,18 +21,18 @@ export default function WellPage() {
 
   const loadResources = () => {
     try {
-      axios.get(getConnection('api/v1/company/all')).then(async (response) => {
+      axios.get(getConnection('api/company/all')).then(async (response) => {
         const { data } = response;
         const wells: ShortWellInfo[] = [];
 
         for (const company of data) {
-          const url = new URL(getConnection(`api/v1/well/depth/company/${company}`))
+          const url = new URL(getConnection(`api/well/depth/company/${company}`))
           url.searchParams.append('fromDate', new Date(prevDate).toLocaleString('en-US'));
           url.searchParams.append('toDate', new Date(currentDate).toLocaleString('en-US'));
 
           const tasks = [
-            axios.get(getConnection(`api/v1/well/company/${company}`)),
-            axios.get(getConnection(`api/v1/well/active/company/${company}`)),
+            axios.get(getConnection(`api/well/company/${company}`)),
+            axios.get(getConnection(`api/well/active/company/${company}`)),
             axios.get<DepthInfo[]>(url.toString())
           ];
           const [wellResponse, activeWellResponse, wellsDepth] = await Promise.all(tasks);

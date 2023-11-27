@@ -1,17 +1,24 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using WellServiceAPI.Data;
-using WellServiceAPI.Services.Abstractions.DB;
 using WellServiceAPI.Shared.Response.Telemetry;
 
-namespace WellServiceAPI.Services.Implementations.DB.Query
+namespace WellServiceAPI.Domain.Queries
 {
-    public class GetAllTelemetryQueryService : QueryServiceBase<IEnumerable<TelemetryInfo>>
+    public class GetAllTelemetryQuery : IRequest<IEnumerable<TelemetryInfo>>
     {
-        public GetAllTelemetryQueryService(WellDBContext wellDBContext) : base(wellDBContext)
+    }
+
+    public class GetAllTelemetryQueryHandler : IRequestHandler<GetAllTelemetryQuery, IEnumerable<TelemetryInfo>>
+    {
+        private readonly WellDBContext _wellDBContext;
+
+        public GetAllTelemetryQueryHandler(WellDBContext dbContext)
         {
+            _wellDBContext = dbContext;
         }
 
-        public override async Task<IEnumerable<TelemetryInfo>> ExecuteAsync()
+        public async Task<IEnumerable<TelemetryInfo>> Handle(GetAllTelemetryQuery request, CancellationToken cancellationToken)
         {
             var telemetrs = await _wellDBContext.Telemetrys
                 .Include(t => t.Well)
@@ -25,7 +32,8 @@ namespace WellServiceAPI.Services.Implementations.DB.Query
                     ContractorName = telemetry.Well.Company.Name,
                     WellName = telemetry.Well.Name,
                 })
-                .ToListAsync();
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             return telemetrs;
         }
